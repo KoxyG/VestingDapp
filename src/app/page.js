@@ -64,7 +64,7 @@ export default function Home() {
   const [selectedButtonValue, setSelectedButtonValue] = useState(null);
 
   return (
-    <main className="">
+    <main className="bg-black">
       <div>
         <nav className="flex justify-between p-10">
           <h1 className="font-black  text-xl">VestingDapp</h1>
