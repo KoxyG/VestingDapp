@@ -5,23 +5,24 @@ import { useCallback, useEffect, useRef, useContext, useState } from "react";
 import { Contract, providers } from "ethers";
 import Web3Modal from "web3modal";
 
-
 import { DAppContext } from "@/context";
 
-import { VESTING_CONTRACT_ADDRESS, TOKEN_CONTRACT_ADDRESS, VESTING_ABI, TOKEN_ABI } from "@/contract";
+import {
+  VESTING_CONTRACT_ADDRESS,
+  TOKEN_CONTRACT_ADDRESS,
+  VESTING_ABI,
+  TOKEN_ABI,
+} from "@/contract";
 
- 
 export default function Home() {
-
   const CHAIN_ID = 11155111;
   const NETWORK_NAME = "Sepolia";
 
   const [provider, setProvider] = useState(null);
   const web3ModalRef = useRef();
 
-  const { walletConnected, setWalletConnected, account, setAccount  } = useContext(DAppContext);
- 
-
+  const { walletConnected, setWalletConnected, account, setAccount } =
+    useContext(DAppContext);
 
   const getProvider = useCallback(async () => {
     const provider = await web3ModalRef.current.connect();
@@ -71,38 +72,86 @@ export default function Home() {
   }, [getProvider]);
 
   const disconnectWallet = useCallback(() => {
-    
     setWalletConnected(false);
-    setAccount('');
-  
+    setAccount("");
+
     web3ModalRef.current = null;
-  }, [setWalletConnected, setAccount]); 
+  }, [setWalletConnected, setAccount]);
 
+  // Helper function to return a Todo Contract instance
+  // given a Provider/Signer
 
-  // useEffect(() => {
-  //   if (!walletConnected) {
-  //     connectWallet();
-  //   }
-  // }, [walletConnected, connectWallet]);
+  const getVestingContractInstance = useCallback((providerOrSigner) => {
+    return new Contract(
+      VESTING_CONTRACT_ADDRESS,
+      VESTING_ABI,
+      providerOrSigner
+    );
+  }, []);
 
+  const getTokenContractInstance = useCallback((providerOrSigner) => {
+    return new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, providerOrSigner);
+  }, []);
 
+  const createVestingSchedule = async (e) => {
+    e.preventDefault();
+    
 
-  const setButtonValue = (value) => {
-    setSelectedButtonValue(value);
+    // if (
+    //   !organisationName ||
+    //   !description ||
+    //   !selectedButtonValue ||
+    //   !vestingDuration ||
+    //   !beneficiary ||
+    //   !amount
+    // ) {
+    //   alert("Please fill all fields");
+    //   return;
+    // } else {
+    //   try {
+    //     setLoading(true);
+    //     const signer = await getSigner();
+    //     const tokenContract = getTokenContractInstance(signer);
+    //     await tokenContract.approve(VESTING_CONTRACT_ADDRESS, amount);
+    //     const vestingContract = getVestingContractInstance(signer);
+    //     const tx = await vestingContract.createVestingSchedule(
+    //       organisationName,
+    //       description,
+    //       selectedButtonValue,
+    //       vestingDuration,
+    //       beneficiary,
+    //       amount
+    //     );
+    //     await tx.wait();
+
+    //     alert("Vesting Schedule created successfully");
+
+    //     setLoading(false);
+    //   } catch (error) {}
+    // }
   };
+
+  
+
+  // const setButtonValue = (value) => {
+  //   setFormEntries.selectedButtonValue(value);
+  // };
 
   const resetButtonStyles = () => {
     // Reset the background color of all buttons
-    const buttons = document.querySelectorAll('button');
+    const buttons = document.querySelectorAll("button");
     buttons.forEach((button) => {
-      button.style.backgroundColor = '';
+      button.style.backgroundColor = "";
     });
   };
 
   const [formEntries, setFormEntries] = useState({
-    name: "",
-    email: "",
-    message: "",
+    organisationName: "",
+    description: "",
+    selectedButtonValue: "",
+    vestingDuration: "",
+    beneficiary: "",
+    amount: "",
   });
 
   const resetFormEntries = () => {
@@ -118,36 +167,18 @@ export default function Home() {
     let key = e.currentTarget.name;
     let value = e.currentTarget.value;
 
+    console.log(key, value);
+
+    
+    
     setFormEntries((formEntrys) => ({
       ...formEntrys,
       [key]: value,
     }));
   };
 
-  const formSubmitHandler = async (e) => {
-    e.preventDefault();
-
-    if (!selectedButtonValue) {
-      alert('Please select a button before submitting.');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-    } catch (error) {}
-    let data = {
-      ...formEntries,
-    };
-  };
-
   const [loading, setLoading] = useState(false);
   const [msgSent, setMsgSent] = useState(false);
-  const [selectedButtonValue, setSelectedButtonValue] = useState(null);
-
-
-
-
 
   return (
     <main className="bg-black">
@@ -155,13 +186,19 @@ export default function Home() {
         <nav className="flex justify-between p-10">
           <h1 className="font-black  text-xl">VestingDapp</h1>
           {!walletConnected ? (
-          <button onClick={connectWallet} className="bg-[#9637eb] rounded-md p-4">
-            Connect wallet
-          </button>
+            <button
+              onClick={connectWallet}
+              className="bg-[#9637eb] rounded-md p-4"
+            >
+              Connect wallet
+            </button>
           ) : (
-            <button onClick={disconnectWallet} className="bg-[#9637eb] rounded-md p-4">
-            Disconnect wallet
-          </button>
+            <button
+              onClick={disconnectWallet}
+              className="bg-[#9637eb] rounded-md p-4"
+            >
+              Disconnect wallet
+            </button>
           )}
         </nav>
 
@@ -170,175 +207,181 @@ export default function Home() {
             Please connect your wallet to proceed.
           </h3>
         ) : (
-        <div className="mx-auto container">
-          {/* form */}
-          <div className="grid w-full sm:w-full justify-items-center pt-[70px] pb-[150px]">
-            <form
-              onSubmit={formSubmitHandler}
-              className={!msgSent ? "fadeIn" : "fadeOut"}
-            >
-              <div className="flex flex-col pb-[32px]">
-                <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
-                  Name of organisation
-                </label>
-                <input
-                  required
-                  name="name"
-                  value={formEntries.name}
-                  onChange={formEntriesHandler}
-                  className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
-                  placeholder="Name of organisation"
-                />
-              </div>
-
-              <div className="flex flex-col pb-[32px]">
-                <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
-                  Description
-                </label>
-                <textarea
-                  required
-                  name="description"
-                  value={formEntries.description}
-                  onChange={formEntriesHandler}
-                  className="border rounded-lg w-full  md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
-                  placeholder="a short Org description"
-                />
-              </div>
-
-              <div className="flex flex-col pb-[32px]">
-                <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
-                  Stakeholder Type
-                </label>
-
-                {/* stake button */}
-                <div className="flex justify-between">
-
-                  <button
-                    type="button"
-                    onClick={() => setButtonValue("0")}
-                    className="rounded-md p-2 bg-[#9637eb]"
-                    style={{
-                      backgroundColor:
-                        selectedButtonValue === "0" ? "lightblue" : "",
-                    }}
+          <div className="mx-auto container">
+            {/* form */}
+            <div className="grid w-full sm:w-full justify-items-center pt-[70px] pb-[150px]">
+              <form
+                onSubmit={createVestingSchedule}
+                className={!msgSent ? "fadeIn" : "fadeOut"}
+              >
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                    Name of organisation
+                  </label>
+                  <input
                     required
-                  >
-                    None
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setButtonValue("1")}
-                    className="rounded-md p-2 bg-[#9637eb]"
-                    style={{
-                      backgroundColor:
-                        selectedButtonValue === "1" ? "lightblue" : "",
-                    }}
-                    required
-                  >
-                   Founder
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setButtonValue("2")}
-                    className="rounded-md p-2 bg-[#9637eb]"
-                    style={{
-                      backgroundColor:
-                        selectedButtonValue === "2" ? "lightblue" : "",
-                    }}
-                    required
-                  >
-                   Investor
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setButtonValue("3")}
-                    className="rounded-md p-2 bg-[#9637eb]"
-                    style={{
-                      backgroundColor:
-                        selectedButtonValue === "3" ? "lightblue" : "",
-                    }}
-                    required
-                  >
-                   Community
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setButtonValue("4")}
-                    className="rounded-md p-2 bg-[#9637eb]"
-                    style={{
-                      backgroundColor:
-                        selectedButtonValue === "4" ? "lightblue" : "",
-                    }}
-                    required
-                  >
-                   PreSale
-                  </button>
-
-
+                    name="organisationName"
+                    value={formEntries.organisationName}
+                    onChange={formEntriesHandler}
+                    className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
+                    placeholder="Name of organisation"
+                  />
                 </div>
-              </div>
 
-              <div className="flex flex-col pb-[32px]">
-                <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
-                  Vesting Duration
-                </label>
-                <input
-                  required
-                  name="vestingDuration"
-                  type="datetime-local"
-                  value={formEntries.vestingDuration}
-                  onChange={formEntriesHandler}
-                  className="border rounded-lg w-[400px] sm:w-[600px] py-3 px-3 text-gray-700 leading-tight "
-                />
-              </div>
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                    Description
+                  </label>
+                  <textarea
+                    required
+                    name="description"
+                    value={formEntries.description}
+                    onChange={formEntriesHandler}
+                    className="border rounded-lg w-full  md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
+                    placeholder="a short Org description"
+                  />
+                </div>
 
-              <div className="flex flex-col pb-[32px]">
-                <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
-                  Beneficiary Address
-                </label>
-                <input
-                  required
-                  name="beneficiary"
-                  value={formEntries.beneficiary}
-                  onChange={formEntriesHandler}
-                  className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
-                  placeholder="Address of beneficiary"
-                />
-              </div>
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                    Stakeholder Type
+                  </label>
 
-              <div className="flex flex-col pb-[32px]">
-                <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
-                  Amount to vest
-                </label>
-                <input
-                  required
-                  name="amount"
-                  type="number"
-                  value={formEntries.amount}
-                  onChange={formEntriesHandler}
-                  className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
-                  placeholder="Input number of tokens to vest"
-                />
-              </div>
+                  {/* stake button */}
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setFormEntries({ ...formEntries, selectedButtonValue: "0" })}
+                      className="rounded-md p-2 bg-[#9637eb]"
+                      style={{
+                        backgroundColor:
+                        formEntries.selectedButtonValue === "0" ? "lightblue" : "",
+                      }}
+                      required
+                    >
+                      None
+                    </button>
 
-            
+                    <button
+                      type="button"
+                      onClick={() => setFormEntries({ ...formEntries, selectedButtonValue: "1" })}
+                      className="rounded-md p-2 bg-[#9637eb]"
+                      style={{
+                        backgroundColor:
+                        formEntries.selectedButtonValue === "1" ? "lightblue" : "",
+                      }}
+                      required
+                    >
+                      Founder
+                    </button>
 
-              <div className="text-white font-bold ">
-                <button
-                  disabled={!formEntries.description || !formEntries.name}
-                  type="submit"
-                  className="py-2.5 bg-[#9637eb] rounded-3xl  w-full"
-                >
-                  {loading ? "Vesting" : "Vest Now"}
-                </button>
-              </div>
-            </form>
+                    <button
+                      type="button"
+                      onClick={() => setFormEntries({ ...formEntries, selectedButtonValue: "2" })}
+                      className="rounded-md p-2 bg-[#9637eb]"
+                      style={{
+                        backgroundColor:
+                        formEntries.selectedButtonValue === "2" ? "lightblue" : "",
+                      }}
+                      required
+                    >
+                      Investor
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormEntries({ ...formEntries, selectedButtonValue: "3" })}
+                      className="rounded-md p-2 bg-[#9637eb]"
+                      style={{
+                        backgroundColor:
+                        formEntries.selectedButtonValue === "3" ? "lightblue" : "",
+                      }}
+                      required
+                    >
+                      Community
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormEntries({ ...formEntries, selectedButtonValue: "4" })}
+                      className="rounded-md p-2 bg-[#9637eb]"
+                      style={{
+                        backgroundColor:
+                        formEntries.selectedButtonValue === "4" ? "lightblue" : "",
+                      }}
+                      required
+                    >
+                      PreSale
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                    Vesting Duration
+                  </label>
+                  <input
+                    required
+                    name="vestingDuration"
+                    type="datetime-local"
+                    value={formEntries.vestingDuration}
+                    onChange={formEntriesHandler}
+                    className="border rounded-lg w-[400px] sm:w-[600px] py-3 px-3 text-gray-700 leading-tight "
+                  />
+                </div>
+
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                    Beneficiary Address
+                  </label>
+                  <input
+                    required
+                    name="beneficiary"
+                    value={formEntries.beneficiary}
+                    onChange={formEntriesHandler}
+                    className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
+                    placeholder="Address of beneficiary"
+                  />
+                </div>
+
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                    Amount to vest
+                  </label>
+                  <input
+                    required
+                    name="amount"
+                    type="number"
+                    value={formEntries.amount}
+                    onChange={formEntriesHandler}
+                    className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
+                    placeholder="Input number of tokens to vest"
+                  />
+                </div>
+
+                <div className="text-white font-bold ">
+                  <button
+                    disabled={
+                      !formEntries.description ||
+                      !formEntries.organisationName ||
+                      !formEntries.selectedButtonValue ||
+                      !formEntries.vestingDuration ||
+                      !formEntries.beneficiary ||
+                      !formEntries.amount
+                    }
+                    type="submit"
+                    className={`py-2.5 rounded-3xl w-full ${
+                      !loading && !formEntries.amount
+                        ? "bg-[#CCCCCC] cursor-not-allowed"
+                        : "bg-[#9637eb] hover:bg-[#842fc1] active:bg-[#731f9e]"
+                    }`}
+                  >
+                    {loading ? "Vesting" : "Vest Now"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
         )}
       </div>
     </main>

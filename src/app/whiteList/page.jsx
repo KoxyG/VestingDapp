@@ -1,7 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { DAppContext } from "@/context";
 
 export default function WhiteList() {
+
+  const { walletConnected, setWalletConnected } = useContext(DAppContext);
+
   const [pending, setPending] = useState(false);
 
   const [formEntries, setFormEntries] = useState({
@@ -29,6 +33,11 @@ export default function WhiteList() {
         </p>
       </div>
 
+      {!walletConnected ? (
+          <h3 className="text-center mt-5">
+            Please connect your wallet to proceed.
+          </h3>
+        ) : (
       <form>
         <div className="flex flex-col pb-[32px]">
           <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
@@ -54,6 +63,7 @@ export default function WhiteList() {
           </button>
         </div>
       </form>
+        )}
     </div>
   );
 }
