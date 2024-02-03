@@ -1,9 +1,91 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useContext, useState } from "react";
+import { Contract, providers } from "ethers";
+import Web3Modal from "web3modal";
 
+
+import { DAppContext } from "@/context";
+
+import { VESTING_CONTRACT_ADDRESS, TOKEN_CONTRACT_ADDRESS, VESTING_ABI, TOKEN_ABI } from "@/contract";
+
+ 
 export default function Home() {
+
+  const CHAIN_ID = 11155111;
+  const NETWORK_NAME = "Sepolia";
+
+  const [provider, setProvider] = useState(null);
+  const web3ModalRef = useRef();
+
+  const { walletConnected, setWalletConnected, account, setAccount  } = useContext(DAppContext);
+ 
+
+
+  const getProvider = useCallback(async () => {
+    const provider = await web3ModalRef.current.connect();
+    const web3Provider = new providers.Web3Provider(provider);
+    const getSigner = web3Provider.getSigner();
+
+    const { chainId } = await web3Provider.getNetwork();
+
+    setAccount(await getSigner.getAddress());
+    setWalletConnected(true);
+
+    if (chainId !== CHAIN_ID) {
+      window.alert(`Please switch to the ${NETWORK_NAME} network!`);
+      throw new Error(`Please switch to the ${NETWORK_NAME} network`);
+    }
+    setProvider(web3Provider);
+  }, []);
+
+  // Helper function to fetch a Signer instance from Metamask
+  const getSigner = useCallback(async () => {
+    const web3Modal = await web3ModalRef.current.connect();
+    const web3Provider = new providers.Web3Provider(web3Modal);
+
+    const { chainId } = await web3Provider.getNetwork();
+
+    if (chainId !== CHAIN_ID) {
+      window.alert(`Please switch to the ${NETWORK_NAME} network!`);
+      throw new Error(`Please switch to the ${NETWORK_NAME} network`);
+    }
+
+    const signer = web3Provider.getSigner();
+    return signer;
+  }, []);
+
+  const connectWallet = useCallback(async () => {
+    try {
+      web3ModalRef.current = new Web3Modal({
+        network: NETWORK_NAME,
+        providerOptions: {},
+        disableInjectedProvider: false,
+      });
+
+      await getProvider();
+    } catch (error) {
+      console.error(error);
+    }
+  }, [getProvider]);
+
+  const disconnectWallet = useCallback(() => {
+    
+    setWalletConnected(false);
+    setAccount('');
+  
+    web3ModalRef.current = null;
+  }, [setWalletConnected, setAccount]); 
+
+
+  // useEffect(() => {
+  //   if (!walletConnected) {
+  //     connectWallet();
+  //   }
+  // }, [walletConnected, connectWallet]);
+
+
 
   const setButtonValue = (value) => {
     setSelectedButtonValue(value);
@@ -63,16 +145,31 @@ export default function Home() {
   const [msgSent, setMsgSent] = useState(false);
   const [selectedButtonValue, setSelectedButtonValue] = useState(null);
 
+
+
+
+
   return (
     <main className="bg-black">
       <div>
         <nav className="flex justify-between p-10">
           <h1 className="font-black  text-xl">VestingDapp</h1>
-          <button className="bg-[#9637eb] rounded-md p-4">
+          {!walletConnected ? (
+          <button onClick={connectWallet} className="bg-[#9637eb] rounded-md p-4">
             Connect wallet
           </button>
+          ) : (
+            <button onClick={disconnectWallet} className="bg-[#9637eb] rounded-md p-4">
+            Disconnect wallet
+          </button>
+          )}
         </nav>
 
+        {!walletConnected ? (
+          <h3 className="text-center mt-5">
+            Please connect your wallet to proceed.
+          </h3>
+        ) : (
         <div className="mx-auto container">
           {/* form */}
           <div className="grid w-full sm:w-full justify-items-center pt-[70px] pb-[150px]">
@@ -242,6 +339,7 @@ export default function Home() {
             </form>
           </div>
         </div>
+        )}
       </div>
     </main>
   );
