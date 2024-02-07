@@ -21,7 +21,7 @@ export default function Home() {
   const [provider, setProvider] = useState(null);
   const web3ModalRef = useRef();
 
-  const { walletConnected, setWalletConnected, account, setAccount } =
+  const { walletConnected, setWalletConnected, account, setAccount, vested, setVested } =
     useContext(DAppContext);
 
   const getProvider = useCallback(async () => {
@@ -43,6 +43,7 @@ export default function Home() {
 
   // Helper function to fetch a Signer instance from Metamask
   const getSigner = useCallback(async () => {
+    
     const web3Modal = await web3ModalRef.current.connect();
     const web3Provider = new providers.Web3Provider(web3Modal);
 
@@ -90,52 +91,80 @@ export default function Home() {
   }, []);
 
   const getTokenContractInstance = useCallback((providerOrSigner) => {
-    return new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, providerOrSigner);
-  }, []);
+    try {
+        return new Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, providerOrSigner);
+    } catch (error) {
+        console.error('Error creating token contract instance:', error);
+        return null;
+    }
+}, []);
 
-  const createVestingSchedule = async (e) => {
-    e.preventDefault();
-    
+const approveToken = async (e) => {
+  try {
+      const signer = await getSigner();
+      console.log('signer', signer);
+      const tokenContract = getTokenContractInstance(signer);
+      console.log('tokenContract', tokenContract)
+      
+      const approve = await tokenContract.approve(VESTING_CONTRACT_ADDRESS, formEntries.amount);
+      console.log("approve", approve);
+      return approve; // Return the result if needed
+  } catch (error) {
+      console.error('Error approving tokens:', error);
+      throw error; // Re-throw the error to propagate it to the caller
+  }
+}
 
-    // if (
-    //   !organisationName ||
-    //   !description ||
-    //   !selectedButtonValue ||
-    //   !vestingDuration ||
-    //   !beneficiary ||
-    //   !amount
-    // ) {
-    //   alert("Please fill all fields");
-    //   return;
-    // } else {
-    //   try {
-    //     setLoading(true);
-    //     const signer = await getSigner();
-    //     const tokenContract = getTokenContractInstance(signer);
-    //     await tokenContract.approve(VESTING_CONTRACT_ADDRESS, amount);
-    //     const vestingContract = getVestingContractInstance(signer);
-    //     const tx = await vestingContract.createVestingSchedule(
-    //       organisationName,
-    //       description,
-    //       selectedButtonValue,
-    //       vestingDuration,
-    //       beneficiary,
-    //       amount
-    //     );
-    //     await tx.wait();
+const createVestingSchedule = async (e) => {
+  e.preventDefault();
+  const epochTime = dateToEpoch(formEntries.vestingDuration);
+  console.log('Epoch Time:', epochTime);
+  
+  if (
+    !formEntries.organisationName ||
+    !formEntries.description ||
+    !formEntries.selectedButtonValue ||
+    !epochTime ||
+    !formEntries.beneficiary ||
+    !formEntries.amount
+  ) {
+    alert("Please fill all fields");
+    return;
+  } else {
+    try {
+      await approveToken();
+      
+      const signer = await getSigner();
+      setLoading(true);
+      const vestingContract = getVestingContractInstance(signer);
+      console.log("vesting Instance", vestingContract);
 
-    //     alert("Vesting Schedule created successfully");
+      const tx = await vestingContract.createVestingSchedule(
+        formEntries.organisationName,
+        formEntries.description,
+        formEntries.selectedButtonValue,
+        epochTime,
+        formEntries.beneficiary,
+        formEntries.amount
+      );
+      
+      await tx.wait();
+      console.log('created vesting', tx);
 
-    //     setLoading(false);
-    //   } catch (error) {}
-    // }
-  };
+      alert("Vesting Schedule created successfully");
+
+      setLoading(false);
+      setVested(true);
+    } catch (error) {
+      console.error('Error creating vesting schedule:', error);
+      setLoading(false);
+      // Handle error appropriately, e.g., display an error message to the user
+      // You can also re-throw the error if you want to propagate it further
+    }
+  }
+};
 
   
-
-  // const setButtonValue = (value) => {
-  //   setFormEntries.selectedButtonValue(value);
-  // };
 
   const resetButtonStyles = () => {
     // Reset the background color of all buttons
@@ -144,6 +173,13 @@ export default function Home() {
       button.style.backgroundColor = "";
     });
   };
+
+  // Function to convert datetime to epoch
+    const dateToEpoch = (dateString) => {
+        const myDate = new Date(dateString);
+        const epochTime = myDate.getTime() / 1000.0;
+        return epochTime;
+    };
 
   const [formEntries, setFormEntries] = useState({
     organisationName: "",
@@ -367,9 +403,10 @@ export default function Home() {
                       !formEntries.selectedButtonValue ||
                       !formEntries.vestingDuration ||
                       !formEntries.beneficiary ||
-                      !formEntries.amount
+                      !formEntries.amount || loading
                     }
                     type="submit"
+                    
                     className={`py-2.5 rounded-3xl w-full ${
                       !loading && !formEntries.amount
                         ? "bg-[#CCCCCC] cursor-not-allowed"
