@@ -304,7 +304,7 @@ export default function Home() {
     <main className="bg-black">
       <div>
         <nav className="flex justify-between p-10">
-          <h1 className="text-white text-xl">VDapp</h1>
+          <h1 className="text-white font-black  text-xl">VDapp</h1>
           {!walletConnected ? (
             <button
               onClick={connectWallet}
