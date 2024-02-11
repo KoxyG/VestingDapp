@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useContext, useState } from "react";
 import { Contract, providers } from "ethers";
 import Web3Modal from "web3modal";
+import Link from "next/link";
 
 import { DAppContext } from "@/context";
 
@@ -303,7 +304,7 @@ export default function Home() {
     <main className="bg-black">
       <div>
         <nav className="flex justify-between p-10">
-          <h1 className="font-black  text-xl">VDapp</h1>
+          <h1 className="text-white text-xl">VDapp</h1>
           {!walletConnected ? (
             <button
               onClick={connectWallet}
@@ -312,23 +313,26 @@ export default function Home() {
               Connect wallet
             </button>
           ) : (
-            <button
-              onClick={disconnectWallet}
-              className="bg-[#9637eb] rounded-md p-4"
-            >
-              Disconnect wallet
-            </button>
+            <div className="flex justify-between gap-4 sm:gap-[100px]">
+              <Link href={"/claim"}>
+                <h3 className="text-bold sm:text-xl pt-[8px]">Claim Tokens</h3>
+              </Link>
+              <button
+                onClick={disconnectWallet}
+                className="bg-[#9637eb] rounded-md p-4"
+              >
+                Disconnect wallet
+              </button>
+            </div>
           )}
         </nav>
 
         {!walletConnected ? (
           <div>
-            <h3 className="text-center text-xl sm:text-3xl font-bold leading-loose px-[100px] mt-[90px]">
-              Welcome to VDApp the decentralized vesting platform revolutionizing{" "}
-              
-              <br /> the way you manage vesting schedules for your tokens.{" "}
-              <br />{" "}
-              <br />
+            <h3 className="text-center text-white text-xl sm:text-3xl font-bold leading-loose px-[100px] sm:mt-[90px]">
+              Welcome to VDApp the decentralized vesting platform
+              revolutionizing <br /> the way you manage vesting schedules for
+              your tokens. <br /> <br />
               <span className="text-[#9677eb]">
                 {" "}
                 Say goodbye to centralized control and hello to transparent,{" "}
