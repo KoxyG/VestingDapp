@@ -330,8 +330,8 @@ export default function Home() {
         {!walletConnected ? (
           <div>
             <h3 className="text-center text-white text-xl sm:text-3xl font-bold leading-loose px-[100px] sm:mt-[90px]">
-              Welcome to VDApp the decentralized vesting platform
-              revolutionizing <br /> the way you manage vesting schedules for
+              Welcome to VDApp the decentralized vesting platform <br /> 
+              revolutionizing the way you manage vesting schedules for
               your tokens. <br /> <br />
               <span className="text-[#9677eb]">
                 {" "}
