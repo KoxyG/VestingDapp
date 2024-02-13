@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useContext, useState } from "react";
 import { Contract, providers } from "ethers";
-import Web3Modal from "web3modal";
+import { ethers } from "ethers";
 
 import { VESTING_ABI, VESTING_CONTRACT_ADDRESS } from "@/contract";
 
@@ -11,8 +11,12 @@ export default function Claim() {
   const NETWORK_NAME = "Sepolia";
 
   const [claiming, setClaiming] = useState(false);
+  const [adminclaim, setadminClaim] = useState(false);
+  const [adminAmount, setAdminAmount] = useState("");
 
-  const web3ModalRef = useRef(new Web3Modal());
+ 
+
+  
 
   const getVestingContractInstance = useCallback((providerOrSigner) => {
     try {
@@ -22,38 +26,47 @@ export default function Claim() {
         providerOrSigner
       );
     } catch (error) {
-      console.error("Error creating vesting contract instance:", error);
+      alert("Error creating vesting contract instance:", error);
     }
   }, []);
 
   // Helper function to fetch a Signer instance from Metamask
   const getSigner = useCallback(async () => {
-    const web3Modal = await web3ModalRef.current.connect();
-    const web3Provider = new providers.Web3Provider(web3Modal);
-
-    const { chainId } = await web3Provider.getNetwork();
-
-    if (chainId !== CHAIN_ID) {
-      window.alert(`Please switch to the ${NETWORK_NAME} network!`);
-      throw new Error(`Please switch to the ${NETWORK_NAME} network`);
-    }
-
-    const signer = web3Provider.getSigner();
-    console.log("Signer:", signer);
-    const address = await signer.getAddress();
-
-    if (
-      signer.provider &&
-      signer.provider.connection &&
-      signer.provider.connection.url
-    ) {
+    try {
+      if (typeof window.ethereum === 'undefined') {
+        alert("pls install metamask to use this feature");
+        return;
+      }
+      // Initialize Web3Provider with window.ethereum
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+  
+      // Request access to the user's MetaMask accounts
+      await provider.send("eth_requestAccounts", []);
+  
+      // Get the chain ID from the connected network
+      const { chainId } = await provider.getNetwork();
+  
+      // Check if the chain ID matches your desired network
+      if (chainId !== CHAIN_ID) {
+        alert(`Please switch to the ${NETWORK_NAME} network!`);
+        throw new Error(`Please switch to the ${NETWORK_NAME} network`);
+      }
+  
+      // Get the signer instance
+      const signer = await provider.getSigner();
+  
+      // Log the signer's address
       const address = await signer.getAddress();
       console.log("Signer address:", address);
-    } else {
-      console.error("Error: Signer is not properly connected to provider.");
+  
+      return signer;
+    } catch (error) {
+      console.error("Error fetching signer:", error);
+      // Handle errors appropriately
+      throw error;
     }
-    return signer;
   }, []);
+  
 
   const claim = async (e) => {
     e.preventDefault();
@@ -79,6 +92,8 @@ export default function Claim() {
           "You are not whitelisted to claim tokens.";
       } else if (error.message.includes("tokens are still being vested")) {
         errorMessage = "Tokens are still being vested.";
+      } else if (error.message.includes("Tokens has already been claimed")) {
+        errorMessage = "Tokens has already been claimed.";
       } else {
         errorMessage = "Error claiming tokens: " + error.message;
       }
@@ -86,6 +101,64 @@ export default function Claim() {
       setClaiming(false);
     }
   };
+
+
+  const adminWithdraw = async (e) => {
+    e.preventDefault();
+
+    try {
+      const signer = await getSigner();
+      console.log("signer", signer);
+      setadminClaim(true);
+      const vestingContract = getVestingContractInstance(signer);
+      console.log("whiteListing Instance", vestingContract);
+
+      const tx = await vestingContract.withdrawTokens(formEntry.adminAmount);
+      await tx.wait();
+      console.log("token claimed", tx);
+
+      setadminClaim(false);
+      resetFormEntry();
+
+      alert("Tokens claimed successfully");
+    } catch (error) {
+      let errorMessage;
+      if (error.message.includes("only admin can do this")) {
+        errorMessage =
+          "only admin can do this";
+      } else if (error.message.includes("Not enough tokens in the contract")) {
+        errorMessage = "Not enough tokens in the contract.";
+      } else {
+        errorMessage = "Error claiming tokens: " + error.message;
+      }
+      alert(errorMessage);
+      setadminClaim(false);
+    }
+  };
+
+  const formEntriesHandler = (e) => {
+    let key = e.currentTarget.name;
+    let value = e.currentTarget.value;
+
+    console.log(key, value);
+
+    setFormEntry((formEntry) => ({
+      ...formEntry,
+      [key]: value,
+    }));
+  };
+
+  const [formEntry, setFormEntry] = useState({
+    adminAmount: "",
+  });
+
+  const resetFormEntry = () => {
+    setFormEntry({
+      adminAmount: "",
+    });
+  };
+
+
 
   return (
     <>
@@ -107,6 +180,7 @@ export default function Claim() {
           {!claiming ? (
             <div className="flex flex-col pb-[12px]">
               <button
+                disabled={claiming}
                 onClick={(e) => claim(e)}
                 className="rounded-md p-2 bg-[#9637eb]"
               >
@@ -128,16 +202,20 @@ export default function Claim() {
         <h1 className="text-4xl text-gray-500 py-6 font-black">OR</h1>
 
         <div className="">
-          <h3 className="pt-[50px] text-lg  pb-2">Admin?, Claim here 👇</h3>
+          <h3 className="pt-[50px] text-lg  pb-2">Admin??. Claim here 👇</h3>
 
           <form>
             <div className="flex  pb-[32px] ">
-              <input
-                type="text"
-                className="rounded"
-                placeholder="Admin withdraw"
-              />
-              <button className="rounded-md p-2 bg-[#9637eb]">
+            <input
+                    type="number"
+                    required
+                    name="adminAmount"
+                    value={formEntry.adminAmount}
+                    onChange={formEntriesHandler}
+                    className="border w-full rounded-l-md rounded-r-none py-2 px-3 text-gray-700 leading-tight "
+                    placeholder="amount to claim"
+                  />
+              <button disabled={adminclaim} onClick={adminWithdraw} className="rounded-r-md rounded-l-none p-2 bg-[#9637eb]">
                 Admin Only
               </button>
             </div>

@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useCallback, useEffect, useRef, useContext, useState } from "react";
+import { useCallback, useRef, useContext, useState } from "react";
 import { Contract, providers } from "ethers";
 import Web3Modal from "web3modal";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { ethers } from "ethers";
 
 import { DAppContext } from "@/context";
 
@@ -21,7 +21,10 @@ export default function Home() {
   const NETWORK_NAME = "Sepolia";
 
   const [provider, setProvider] = useState(null);
-  const web3ModalRef = useRef();
+
+  // const web3ModalRef = useRef("");
+
+  const web3ModalRef = useRef(() => new Web3Modal());
 
   const {
     walletConnected,
@@ -43,38 +46,47 @@ export default function Home() {
     setWalletConnected(true);
 
     if (chainId !== CHAIN_ID) {
-      window.alert(`Please switch to the ${NETWORK_NAME} network!`);
+      alert(`Please switch to the ${NETWORK_NAME} network!`);
       throw new Error(`Please switch to the ${NETWORK_NAME} network`);
     }
     setProvider(web3Provider);
   }, []);
 
-  // Helper function to fetch a Signer instance from Metamask
+  // Helper function to fetch a Signer instance from MetaMask
   const getSigner = useCallback(async () => {
-    const web3Modal = await web3ModalRef.current.connect();
-    const web3Provider = new providers.Web3Provider(web3Modal);
+    try {
+      if (typeof window.ethereum === "undefined") {
+        alert("pls install metamask to use this feature");
+        return;
+      }
+      // Initialize Web3Provider with window.ethereum
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-    const { chainId } = await web3Provider.getNetwork();
+      // Request access to the user's MetaMask accounts
+      await provider.send("eth_requestAccounts", []);
 
-    if (chainId !== CHAIN_ID) {
-      window.alert(`Please switch to the ${NETWORK_NAME} network!`);
-      throw new Error(`Please switch to the ${NETWORK_NAME} network`);
-    }
+      // Get the chain ID from the connected network
+      const { chainId } = await provider.getNetwork();
 
-    const signer = web3Provider.getSigner();
-    const address = await signer.getAddress();
+      // Check if the chain ID matches your desired network
+      if (chainId !== CHAIN_ID) {
+        alert(`Please switch to the ${NETWORK_NAME} network!`);
+        throw new Error(`Please switch to the ${NETWORK_NAME} network`);
+      }
 
-    if (
-      signer.provider &&
-      signer.provider.connection &&
-      signer.provider.connection.url
-    ) {
+      // Get the signer instance
+      const signer = await provider.getSigner();
+
+      // Log the signer's address
       const address = await signer.getAddress();
       console.log("Signer address:", address);
-    } else {
-      console.error("Error: Signer is not properly connected to provider.");
+
+      return signer;
+    } catch (error) {
+      console.error("Error fetching signer:", error);
+      // Handle errors appropriately
+      throw error;
     }
-    return signer;
   }, []);
 
   const connectWallet = useCallback(async () => {
@@ -137,6 +149,30 @@ export default function Home() {
       return approve; // Return the result if needed
     } catch (error) {
       console.error("Error approving tokens:", error);
+      throw error; // Re-throw the error to propagate it to the caller
+    }
+  };
+
+  const mintToken = async (e) => {
+    e.preventDefault();
+    try {
+      setMinting(true);
+      const signer = await getSigner();
+      console.log("signer", signer);
+      const tokenContract = getTokenContractInstance(signer);
+      console.log("tokenContract", tokenContract);
+
+      const Mint = await tokenContract.mint(
+        mintEntries.accountMinter,
+        mintEntries.amountMinter
+      );
+      console.log("Mint", Mint);
+      alert("Minted successfully");
+      setMinting(false);
+      resetMintEntries();
+    } catch (error) {
+      setMinting(false);
+      console.log("Error Minting", error);
       throw error; // Re-throw the error to propagate it to the caller
     }
   };
@@ -216,6 +252,11 @@ export default function Home() {
     amount: "",
   });
 
+  const [mintEntries, setMintEntries] = useState({
+    accountMinter: "",
+    amountMinter: "",
+  });
+
   const resetFormEntries = () => {
     setFormEntries({
       organisationName: "",
@@ -226,6 +267,13 @@ export default function Home() {
       amount: "",
     });
     return setWhitelist(true);
+  };
+
+  const resetMintEntries = () => {
+    setFormEntries({
+      accountMinter: "",
+      amountMinter: "",
+    });
   };
 
   const formEntriesHandler = (e) => {
@@ -240,6 +288,19 @@ export default function Home() {
     }));
   };
 
+  const formMintHandler = (e) => {
+    let key = e.currentTarget.name;
+    let value = e.currentTarget.value;
+
+    console.log(key, value);
+
+    setMintEntries((mintEntries) => ({
+      ...mintEntries,
+      [key]: value,
+    }));
+  };
+
+  const [minting, setMinting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [whitelist, setWhitelist] = useState(false);
 
@@ -277,7 +338,6 @@ export default function Home() {
 
         alert("Address whitelisted successfully");
         resetWhiteListFormEntries();
-        useRouter().push("/claim");
       } catch (error) {
         console.error("Error whiteListing", error);
         setPending(false);
@@ -331,32 +391,33 @@ export default function Home() {
 
         {!walletConnected ? (
           <div>
-            <h3 className="text-center text-white text-xl sm:text-3xl font-bold leading-loose px-[100px] sm:mt-[90px]">
-              Welcome to VDApp the decentralized vesting platform <br />
+            <h3 className="text-center text-white text-2xl sm:text-4xl font-bold leading-loose px-[100px] sm:mt-[90px]">
+              Welcome to <span className="text-[#9677eb]">VDApp</span> the decentralized vesting platform <br />
               <br />
-              <span className="text-[#9677eb]">
-                {" "}
-                Say goodbye to centralized control and hello to transparent,{" "}
-                <br /> trustless vesting dApp.{" "}
-              </span>
+              
             </h3>
 
-            <p className="text-center pb-[30px] text-gray-300 pt-[50px]">
-              To Interact with this Dapp, <br />you need to have <span className="text-[#9677eb]">sepolia Eth </span>for gasFee and<br />you need to be airdropped Some
-              <span className="text-[#9679eb]">VTokens too</span><br /> Mint some tokens now 👇🏾
+            <p className="text-center px-[30px] pb-[30px] text-gray-300 pt-[50px]">
+              To Interact with this Dapp, <br />
+              you need to have{" "}
+              <span className="text-[#9677eb]">sepolia Eth </span>for gasFee and
+              <br />
+              you need to be airdropped Some
+              <span className="text-[#9679eb]">VTokens too</span>
+              <br /> Mint some tokens now 👇🏾
             </p>
 
-            <form>
+            <form onSubmit={mintToken}>
               <div className="grid w-full sm:w-full justify-items-center pt-[70px] pb-[150px]">
                 <div className="flex flex-col pb-[32px]">
                   <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
-                   Address to be airdropped
+                    Address to be airdropped
                   </label>
                   <input
                     required
-                    name="organisationName"
-                    value={formEntries.organisationName}
-                    onChange={formEntriesHandler}
+                    name="accountMinter"
+                    value={mintEntries.accountMinter}
+                    onChange={formMintHandler}
                     className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
                     placeholder="input your eth address"
                   />
@@ -368,21 +429,27 @@ export default function Home() {
                   </label>
                   <input
                     required
-                    name="organisationName"
-                    value={formEntries.organisationName}
-                    onChange={formEntriesHandler}
+                    name="amountMinter"
+                    value={mintEntries.amountMinter}
+                    onChange={formMintHandler}
                     className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
                     placeholder="any number, 0-300"
                   />
                 </div>
 
                 <div className="text-white font-bold ">
-                  <button type="submit" className={"py-3 px-5 bg-[#9637eb] rounded-md w-full"}>
-                    Mint
+                  <button
+                    disabled={minting}
+                    type="submit"
+                    className={"py-3 px-5 bg-[#9637eb] rounded-md w-full"}
+                  >
+                    {minting ? "minting" : "Mint"}
                   </button>
                 </div>
               </div>
             </form>
+
+      
           </div>
         ) : (
           <div className="mx-auto container">
