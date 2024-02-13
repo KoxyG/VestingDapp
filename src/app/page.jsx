@@ -172,7 +172,7 @@ export default function Home() {
       resetMintEntries();
     } catch (error) {
       setMinting(false);
-      console.log("Error Minting", error);
+      alert("Error Minting", error);
       throw error; // Re-throw the error to propagate it to the caller
     }
   };
@@ -219,7 +219,7 @@ export default function Home() {
         alert("Vesting Schedule created successfully");
         resetFormEntries();
       } catch (error) {
-        console.error("Error creating vesting schedule:", error);
+        alert("Error creating vesting schedule:", error);
         setLoading(false);
         setWhitelist(false);
         // Handle error appropriately, e.g., display an error message to the user
@@ -339,7 +339,13 @@ export default function Home() {
         alert("Address whitelisted successfully");
         resetWhiteListFormEntries();
       } catch (error) {
-        console.error("Error whiteListing", error);
+        let errorMessage;
+        if (error.message.includes("Address is already whitelisted ")) {
+          errorMessage = "Address is already whitelisted ";
+        } else {
+          errorMessage = "Error whitelisting, refresh: " + error.message;
+        }
+        alert(errorMessage);
         setPending(false);
       }
     }
@@ -370,7 +376,7 @@ export default function Home() {
           {!walletConnected ? (
             <button
               onClick={connectWallet}
-              className="bg-[#9637eb] rounded-md p-4"
+              className="bg-[#9637eb] text-white rounded-md p-4"
             >
               Connect wallet
             </button>
@@ -391,10 +397,10 @@ export default function Home() {
 
         {!walletConnected ? (
           <div>
-            <h3 className="text-center text-white text-2xl sm:text-4xl font-bold leading-loose px-[100px] sm:mt-[90px]">
-              Welcome to <span className="text-[#9677eb]">VDApp</span> the decentralized vesting platform <br />
+            <h3 className="text-center pt-[30px] sm:pt-[0px] text-white text-3xl sm:text-4xl font-bold leading-loose px-[100px] sm:mt-[90px]">
+              Welcome to <span className="text-[#9677eb]">VDApp</span> the
+              decentralized vesting platform <br />
               <br />
-              
             </h3>
 
             <p className="text-center px-[30px] pb-[30px] text-gray-300 pt-[50px]">
@@ -448,8 +454,6 @@ export default function Home() {
                 </div>
               </div>
             </form>
-
-      
           </div>
         ) : (
           <div className="mx-auto container">
