@@ -1,5 +1,5 @@
-export const TOKEN_CONTRACT_ADDRESS = "0x32cbA404516B7402FE05E5ECfC45fe9b6C28D00F";
-export const VESTING_CONTRACT_ADDRESS = "0x780caE3E6e03bc893B2C39A2fD6f6b7Ca1D49ee8";
+export const TOKEN_CONTRACT_ADDRESS = "0x48d0AC1E78B876d57BeC22F333aB2fb4AE7B1Cf4";
+export const VESTING_CONTRACT_ADDRESS = "0xbe7909c31291beb7d7D5E7E40fE6Ac5f78022915";
 
 
 export const TOKEN_ABI = [
@@ -142,6 +142,24 @@ export const TOKEN_ABI = [
 		],
 		"name": "Approval",
 		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "mint",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"inputs": [
@@ -368,11 +386,6 @@ export const VESTING_ABI = [
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_admin",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
 				"name": "_token",
 				"type": "address"
 			}
@@ -470,6 +483,19 @@ export const VESTING_ABI = [
 			}
 		],
 		"name": "whitelistAddress",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "withdrawTokens",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"

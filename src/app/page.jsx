@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useContext, useState } from "react";
 import { Contract, providers } from "ethers";
 import Web3Modal from "web3modal";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { DAppContext } from "@/context";
 
@@ -276,6 +277,7 @@ export default function Home() {
 
         alert("Address whitelisted successfully");
         resetWhiteListFormEntries();
+        useRouter().push("/claim");
       } catch (error) {
         console.error("Error whiteListing", error);
         setPending(false);
@@ -330,19 +332,57 @@ export default function Home() {
         {!walletConnected ? (
           <div>
             <h3 className="text-center text-white text-xl sm:text-3xl font-bold leading-loose px-[100px] sm:mt-[90px]">
-              Welcome to VDApp the decentralized vesting platform <br /> 
-              revolutionizing the way you manage vesting schedules for
-              your tokens. <br /> <br />
+              Welcome to VDApp the decentralized vesting platform <br />
+              <br />
               <span className="text-[#9677eb]">
                 {" "}
                 Say goodbye to centralized control and hello to transparent,{" "}
-                <br /> trustless vesting with our innovative dApp.{" "}
+                <br /> trustless vesting dApp.{" "}
               </span>
             </h3>
 
-            <p className="text-center pb-[100px] text-gray-300 pt-[50px]">
-              Connect your wallet now to begin
+            <p className="text-center pb-[30px] text-gray-300 pt-[50px]">
+              To Interact with this Dapp, <br />you need to have <span className="text-[#9677eb]">sepolia Eth </span>for gasFee and<br />you need to be airdropped Some
+              <span className="text-[#9679eb]">VTokens too</span><br /> Mint some tokens now 👇🏾
             </p>
+
+            <form>
+              <div className="grid w-full sm:w-full justify-items-center pt-[70px] pb-[150px]">
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                   Address to be airdropped
+                  </label>
+                  <input
+                    required
+                    name="organisationName"
+                    value={formEntries.organisationName}
+                    onChange={formEntriesHandler}
+                    className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
+                    placeholder="input your eth address"
+                  />
+                </div>
+
+                <div className="flex flex-col pb-[32px]">
+                  <label className="pb-[7px] text-white text-sm sm:text-base font-semibold leading-snug">
+                    Amount
+                  </label>
+                  <input
+                    required
+                    name="organisationName"
+                    value={formEntries.organisationName}
+                    onChange={formEntriesHandler}
+                    className="border rounded-lg w-full md:w-[600px] py-3 px-3 text-gray-700 leading-tight "
+                    placeholder="any number, 0-300"
+                  />
+                </div>
+
+                <div className="text-white font-bold ">
+                  <button type="submit" className={"py-3 px-5 bg-[#9637eb] rounded-md w-full"}>
+                    Mint
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         ) : (
           <div className="mx-auto container">
