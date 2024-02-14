@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# VDAPP - Vesting DApp
+
+
+# Description
+VDAPP is a decentralized application (DApp) designed for vesting tokens by an organization. It allows tokens to be vested over a specific duration, after which they can be claimed by the intended recipients. In case the recipients are unable to claim their vested tokens, the admin has the capability to claim them on their behalf.
+
+## Features
+
+- **Token Vesting**: Tokens can be vested over a specified duration.
+- **Claim Functionality**: Recipients can claim their vested tokens once the vesting duration is over.
+- **Admin Claim**: Admin has the authority to claim tokens on behalf of recipients who are unable to claim them.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+To run the VDAPP, you need:
+
+- Ethereum Wallet or a compatible browser with MetaMask extension installed.
+- Solidity compiler.
+
+### Installation
+
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/VDAPP.git
+cd VDAPP
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Usage
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+To run the VDAPP, you need:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- Connect to your Ethereum wallet and ensure it's connected to the desired network (e.g., Rinkeby, Ropsten, etc.).
+- Deploy the compiled smart contract to the blockchain using Remix or a similar tool.
+- Interact with the deployed contract through its user interface to vest tokens and claim them.
+- As an admin, utilize the designated functionality to claim tokens on behalf of recipients if needed.
 
-## Learn More
+## Contributing
+- Contributions are welcome!
 
-To learn more about Next.js, take a look at the following resources:
+## Author
+- [Progress Ochuko](https://twitter.com/koxy_dev)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Video walkthrough.
+- [Loom](https://www.loom.com/share/f60576bd874c4aa4b253cdab638293cd?src=composer.)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## License
+- his project is licensed under the [MIT] License - see the LICENSE.md file for details
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
