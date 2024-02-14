@@ -48,5 +48,5 @@ To run the VDAPP, you need:
 - [Loom](https://www.loom.com/share/f60576bd874c4aa4b253cdab638293cd?src=composer.)
 
 ## License
-- his project is licensed under the [MIT] License - see the LICENSE.md file for details
+- This project is licensed under the [MIT] License - see the LICENSE.md file for details
 
