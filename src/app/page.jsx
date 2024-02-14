@@ -413,7 +413,7 @@ export default function Home() {
               <br /> Mint some tokens now!
               <br />
               <br />
-              <span>TOKEN CA:  0x4469199279E1910c508CF9FD0d1D873755831131</span>
+              <span>TOKEN CA: <br /> 0x4469199279E1910c508CF9FD0d1D873755831131</span>
               
             </p>
 
