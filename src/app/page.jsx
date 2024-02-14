@@ -410,7 +410,11 @@ export default function Home() {
               <br />
               you need to be airdropped Some
               <span className="text-[#9679eb]">VTokens too</span>
-              <br /> Mint some tokens now 👇🏾
+              <br /> Mint some tokens now!
+              <br />
+              <br />
+              <span>TOKEN CA:  0x4469199279E1910c508CF9FD0d1D873755831131</span>
+              
             </p>
 
             <form onSubmit={mintToken}>
