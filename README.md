@@ -47,6 +47,10 @@ To run the VDAPP, you need:
 ## Video walkthrough.
 - [Loom](https://www.loom.com/share/f60576bd874c4aa4b253cdab638293cd?src=composer.)
 
+## CONTRACT
+- [VToken](https://sepolia.etherscan.io/token/0x4469199279e1910c508cf9fd0d1d873755831131)
+- [Vesting contract](https://sepolia.etherscan.io/address/0x0f67c9bab0639aea1ceb3ddc3f16f8177d121c45)
+
 ## License
 - This project is licensed under the [MIT] License - see the LICENSE.md file for details
 
